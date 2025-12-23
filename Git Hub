@@ -1,0 +1,80 @@
+# 🚀 Git and GitHub for the SRE (Site Reliability Engineer)
+
+Git and GitHub (or any Git-based service) are the foundational tools for SRE work, serving as the single source of truth for all infrastructure, configuration, and code.
+
+---
+
+## 1. 🏗️ Git as the Foundation for Infrastructure as Code (IaC)
+
+SREs treat all infrastructure as code (IaC) to ensure consistency, auditability, and automation.
+
+* **IaC Version Control:** All configurations (e.g., Terraform, Kubernetes manifests, Ansible playbooks) are stored in Git.
+    * **Benefit:** Provides an immutable audit log, allowing you to answer: "What changed, when, and who approved it?"
+* **Rollbacks:** Git history enables rapid, reliable rollbacks by reverting to the last known good commit upon incident detection.
+
+### Core Git Commands for SRE Operations
+
+| Command | Purpose | SRE Use Case |
+| :--- | :--- | :--- |
+| `git clone` | Create a local copy of the repository. | Getting the latest IaC module to work on. |
+| `git diff` | Show changes between commits, branches, or working directory. | Reviewing changes before committing a critical infrastructure fix. |
+| `git log` | Review the commit history. | Quickly identifying the last few changes before an outage began. |
+| `git revert [commit]` | Creates a *new* commit that undoes the changes of a target commit. | **Crucial:** Safely undoing a deployment change without rewriting history. |
+| `git fetch`/`git pull` | Retrieve/update local branches from the remote. | Keeping the local `main` branch up-to-date before deployment. |
+
+---
+
+## 2. 🔀 Branching, PRs, and Change Control
+
+The Pull Request (PR) workflow is the primary change control gate maintained by SREs.
+
+### Branching Models
+
+| Strategy | Description | SRE Relevance |
+| :--- | :--- | :--- |
+| **GitHub Flow** | All work merges into a single `main` branch, which is **always deployable**. | Ideal for fast-paced, continuous deployment (CD) environments. |
+| **Trunk-Based Development (TBD)** | Small, short-lived branches merge to `main` multiple times daily. | Optimal for maximum CI/CD speed and low latency deployments. |
+
+### Pull Request (PR) Quality Gates
+
+SREs are responsible for defining and enforcing these checks via GitHub branch protection rules:
+
+1.  **Peer/SRE Review:** Required approval from another team member or dedicated SRE.
+2.  **CI/CD Status Checks:** The PR must pass all automated pipeline steps:
+    * **Linting/Validation:** Syntax checks for Terraform/YAML/etc.
+    * **Security Scanning:** IaC static analysis for insecure configurations.
+    * **Automated Testing:** Unit or integration tests for IaC modules.
+
+---
+
+## 3. ⚙️ GitHub Actions for Automation (CI/CD)
+
+GitHub Actions (or similar services) read Git and execute SRE operational logic.
+
+* **Continuous Integration (CI):** Automating validation and security scans on every `push`.
+* **Continuous Delivery (CD):** Automating the deployment of configuration/infrastructure:
+    * Running `terraform plan` on the PR.
+    * Running `terraform apply` on merge to `main`.
+* **SRE Automation:**
+    * **Runbook Execution:** Automating steps from runbooks, triggered via repository changes or external tools.
+    * **Periodic Drills:** Scheduling automated chaos/disaster recovery tests.
+
+---
+
+## 4. 🧠 GitOps: The SRE Operational Model
+
+GitOps centers the entire operational process around Git.
+
+* **Principle:** The declarative configuration in Git is the **single source of truth** for the desired state of the environment.
+* **Mechanism:** An automated operator (like ArgoCD or Flux) monitors the Git repository. When a change is committed, the operator **pulls** the change and applies it to the cluster to match the desired state. 
+* **SRE Benefit:** Ensures that the deployed state *always* reflects the version-controlled state, enhancing auditability and reducing drift.
+
+---
+
+## 5. 🚨 Incident Response and Auditing
+
+Git is essential for both proactive and reactive reliability work.
+
+* **Rapid Investigation:** During an incident, the first step is often checking the **`git log`** on configuration repositories to identify the last few changes that may have triggered the outage.
+* **Hotfixes:** Changes are made on dedicated short-lived hotfix branches and merged immediately, often bypassing non-critical CI steps (with clear documentation).
+* **Post-Mortems:** Remediation action items (e.g., adding a new monitoring check, modifying deployment scripts) are tracked and implemented as code, ensuring the resolution itself is version-controlled and auditable.
